@@ -1,7 +1,7 @@
 import { and, count, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db/client";
-import { participants, responses } from "@/lib/db/schema";
+import { participants, questions, responses } from "@/lib/db/schema";
 
 export const getSessionStats = async (sessionId: string) => {
   const [{ participantCount }] = await db
@@ -63,4 +63,53 @@ export const getSessionLeaderboard = async (sessionId: string, limit = 10) => {
     .limit(limit);
 
   return rows;
+};
+
+/** Get detailed per-participant results with all responses */
+export const getSessionParticipantDetails = async (sessionId: string) => {
+  const allParticipants = await db
+    .select()
+    .from(participants)
+    .where(eq(participants.sessionId, sessionId))
+    .orderBy(desc(participants.completedAt));
+
+  const details = await Promise.all(
+    allParticipants.map(async (p) => {
+      const participantResponses = await db
+        .select({
+          order: responses.order,
+          answerText: responses.answerText,
+          scorePoint: responses.scorePoint,
+          scoreAccuracy: responses.scoreAccuracy,
+          scoreIdea: responses.scoreIdea,
+          totalScore: responses.totalScore,
+          evaluationSummary: responses.evaluationSummary,
+          evaluatedAt: responses.evaluatedAt,
+          questionId: responses.questionId,
+          mediumCategory: questions.mediumCategory,
+          imagePath: questions.imagePath,
+        })
+        .from(responses)
+        .innerJoin(questions, eq(responses.questionId, questions.id))
+        .where(eq(responses.participantId, p.id))
+        .orderBy(responses.order);
+
+      const rawTotal = participantResponses.reduce((s, r) => s + r.totalScore, 0);
+      const rawMax = p.questionCount * 30;
+      const score100 = rawMax > 0 ? Math.round((rawTotal / rawMax) * 100) : 0;
+
+      return {
+        id: p.id,
+        publicId: p.publicId,
+        nickname: p.nickname,
+        volumeLevel: p.volumeLevel,
+        questionCount: p.questionCount,
+        completedAt: p.completedAt,
+        score100,
+        responses: participantResponses,
+      };
+    })
+  );
+
+  return details;
 };

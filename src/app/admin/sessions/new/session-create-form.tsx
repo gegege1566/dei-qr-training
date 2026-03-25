@@ -132,7 +132,7 @@ export function SessionCreateForm() {
         title: formData.get("title")?.toString().trim(),
         description: formData.get("description")?.toString().trim(),
         slug: formData.get("slug")?.toString().trim(),
-        status: formData.get("status")?.toString() ?? "draft",
+        status: "active",
         allowedVolumes: formData.getAll("volumes").map((v) => v.toString()),
         questionCount,
         allowedCategories: allCategoriesSelected ? undefined : Array.from(selectedCategories),
@@ -401,23 +401,6 @@ export function SessionCreateForm() {
               <p className="text-xs text-slate-500">空欄の場合、パスワードなしでアクセスできます。</p>
             </div>
 
-            {/* Status */}
-            <div className="space-y-1.5">
-              <Label htmlFor="status" className="text-slate-300">状態</Label>
-              <select
-                id="status" name="status" defaultValue="draft"
-                className="h-8 w-full rounded-lg border border-slate-700 bg-slate-900/60 px-2.5 text-sm text-white focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-              >
-                {STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Volumes (kept for compatibility) */}
-            <input type="hidden" name="volumes" value="S" />
-            <input type="hidden" name="volumes" value="M" />
-            <input type="hidden" name="volumes" value="L" />
 
 
           </CardContent>
