@@ -8,6 +8,7 @@ const PERSONAL_SESSION_SLUG = "personal";
 
 const bodySchema = z.object({
   volume: z.enum(["S", "M", "L"]),
+  nickname: z.string().max(30).optional(),
 });
 
 async function getOrCreatePersonalSession(): Promise<string> {
@@ -41,12 +42,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const { volume } = parsed.data;
+    const { volume, nickname } = parsed.data;
     const sessionId = await getOrCreatePersonalSession();
 
     const result = await createParticipantWithQuestionSet({
       sessionId,
       volumeLevel: volume,
+      nickname: nickname || undefined,
     });
 
     return Response.json({

@@ -51,6 +51,7 @@ const fadeUp = {
 export default function Home() {
   const [selectedVolume, setSelectedVolume] = useState<VolumeId | null>(null);
   const [isStarting, setIsStarting] = useState(false);
+  const [nickname, setNickname] = useState("");
   const router = useRouter();
 
   async function handleStart() {
@@ -61,7 +62,7 @@ export default function Home() {
       const res = await fetch("/api/play/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ volume: selectedVolume }),
+        body: JSON.stringify({ volume: selectedVolume, nickname: nickname.trim() || undefined }),
       });
 
       if (!res.ok) {
@@ -108,6 +109,42 @@ export default function Home() {
           >
             バナー広告のDEI問題点を見つけて、AIが評価します
           </motion.p>
+        </motion.div>
+      </section>
+
+      {/* Nickname */}
+      <section className="px-4 pb-6">
+        <motion.div
+          className="mx-auto max-w-md"
+          initial="hidden"
+          animate="show"
+          variants={container}
+        >
+          <motion.p
+            className="mb-3 text-center text-sm font-medium text-slate-400"
+            variants={fadeUp}
+          >
+            ニックネーム
+          </motion.p>
+          <motion.div variants={fadeUp} className="flex gap-2">
+            <input
+              type="text"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              placeholder="空欄ならランダムで付きます"
+              className="flex-1 rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const pool = ["閃光のクリエイター", "蒼天のナビゲーター", "深緑のストラテジスト", "黄金のイノベーター", "紅蓮のアナリスト", "白銀のメンター", "碧空のチャレンジャー", "暁のファシリテーター"];
+                setNickname(pool[Math.floor(Math.random() * pool.length)]);
+              }}
+              className="shrink-0 rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-2.5 text-xs text-cyan-400 transition-colors hover:border-cyan-500/40 hover:bg-slate-700/60"
+            >
+              おまかせ
+            </button>
+          </motion.div>
         </motion.div>
       </section>
 

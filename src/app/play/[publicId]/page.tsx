@@ -293,7 +293,7 @@ export default function PlayPage({
                     onChange={(e) => setAnswerText(e.target.value)}
                     placeholder="回答を入力してください…"
                     rows={3}
-                    className="w-full resize-none rounded-lg border border-slate-700 bg-slate-800/80 px-4 py-3 text-sm leading-relaxed text-white placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
+                    className="w-full resize-none rounded-lg border border-slate-700 bg-slate-800/80 px-4 py-3 text-base leading-relaxed text-white placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
                     disabled={submitting}
                   />
                   <span className="absolute bottom-2.5 right-3 text-xs tabular-nums text-slate-500">
