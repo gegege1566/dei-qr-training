@@ -34,7 +34,7 @@ export const callGoogle = async (messages: ChatMessage[]): Promise<{ text: strin
     })),
     generationConfig: {
       temperature: 0,
-      maxOutputTokens: 1024,
+      maxOutputTokens: 4096,
       responseMimeType: "application/json",
       responseSchema: {
         type: "OBJECT",
