@@ -1,6 +1,8 @@
 import { db } from "@/lib/db/client";
 import { evaluateParticipant } from "@/lib/evaluation/engine";
 
+export const maxDuration = 60; // Allow up to 60s on Vercel
+
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ publicId: string }> },
@@ -26,12 +28,12 @@ export async function POST(
       );
     }
 
-    // Run evaluation directly (not queued) so errors are visible
+    // Run evaluation (with extended timeout)
     const results = await evaluateParticipant(participant.id);
 
     const failed = results.filter((r) => r.status === "rejected");
     if (failed.length > 0) {
-      console.error("Some evaluations failed:", failed);
+      console.error("Some evaluations failed:", failed.map((r) => r.error));
     }
 
     return Response.json({
@@ -39,7 +41,6 @@ export async function POST(
       total: results.length,
       succeeded: results.filter((r) => r.status === "fulfilled").length,
       failed: failed.length,
-      errors: failed.map((r) => r.error),
     });
   } catch (error) {
     console.error("POST /api/play/[publicId]/evaluate failed:", error);

@@ -141,14 +141,8 @@ export default function PlayPage({
       const data: AnswerResponse = await res.json()
 
       if (!data.next) {
-        // Last question — trigger evaluation, then redirect
-        toast.info('回答を評価中です…')
-        const evalRes = await fetch(`/api/play/${publicId}/evaluate`, {
-          method: 'POST',
-        })
-        if (!evalRes.ok) {
-          throw new Error('評価処理に失敗しました')
-        }
+        // Last question — trigger evaluation in background, redirect immediately
+        fetch(`/api/play/${publicId}/evaluate`, { method: 'POST' }).catch(console.error)
         router.push(`/play/${publicId}/results`)
       } else {
         await fetchQuestion()
