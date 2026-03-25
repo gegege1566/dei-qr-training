@@ -65,6 +65,56 @@ export const getSessionLeaderboard = async (sessionId: string, limit = 10) => {
   return rows;
 };
 
+/** Get all scores grouped by medium category (across ALL responses, not just this session) */
+export const getCategoryScoreDistribution = async () => {
+  const rows = await db
+    .select({
+      mediumCategory: questions.mediumCategory,
+      totalScore: responses.totalScore,
+    })
+    .from(responses)
+    .innerJoin(questions, eq(responses.questionId, questions.id))
+    .where(isNotNull(responses.evaluatedAt));
+
+  // Group scores by category
+  const grouped: Record<string, number[]> = {};
+  for (const row of rows) {
+    if (!grouped[row.mediumCategory]) {
+      grouped[row.mediumCategory] = [];
+    }
+    grouped[row.mediumCategory].push(row.totalScore);
+  }
+
+  // Build histogram buckets (0-5, 6-10, 11-15, 16-20, 21-25, 26-30)
+  const bucketLabels = ["0-5", "6-10", "11-15", "16-20", "21-25", "26-30"];
+  const toBucket = (score: number) => {
+    if (score <= 5) return 0;
+    if (score <= 10) return 1;
+    if (score <= 15) return 2;
+    if (score <= 20) return 3;
+    if (score <= 25) return 4;
+    return 5;
+  };
+
+  const categories = Object.entries(grouped)
+    .map(([category, scores]) => {
+      const buckets = [0, 0, 0, 0, 0, 0];
+      for (const s of scores) {
+        buckets[toBucket(s)]++;
+      }
+      const avg = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+      return {
+        category,
+        count: scores.length,
+        avg: Math.round(avg * 10) / 10,
+        buckets,
+      };
+    })
+    .sort((a, b) => b.count - a.count);
+
+  return { categories, bucketLabels };
+};
+
 /** Get detailed per-participant results with all responses */
 export const getSessionParticipantDetails = async (sessionId: string) => {
   const allParticipants = await db

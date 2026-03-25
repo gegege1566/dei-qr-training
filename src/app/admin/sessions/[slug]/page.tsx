@@ -3,13 +3,14 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Users, CheckCircle, MessageSquare, Download, Clock, AlertTriangle, Trophy, ChevronDown } from "lucide-react";
 
 import { getSessionBySlug, getSessionRemainingMs } from "@/lib/db/session-service";
-import { getSessionStats, getSessionLeaderboard, getSessionParticipantDetails } from "@/lib/db/stats-service";
+import { getSessionStats, getSessionLeaderboard, getSessionParticipantDetails, getCategoryScoreDistribution } from "@/lib/db/stats-service";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { SessionQRCard } from "./session-qr-card";
 import { AdminUrlCard } from "./admin-url-card";
 import { ParticipantDetails } from "./participant-details";
+import { CategoryHistogram } from "./category-histogram";
 
 export const dynamic = "force-dynamic";
 
@@ -51,10 +52,11 @@ export default async function SessionDetailPage({ params, searchParams }: Sessio
   const isExpiringSoon = remainingMs > 0 && remainingMs < 2 * 60 * 60 * 1000;
   const isExpired = remainingMs <= 0;
 
-  const [stats, leaderboard, participantDetails] = await Promise.all([
+  const [stats, leaderboard, participantDetails, categoryDist] = await Promise.all([
     getSessionStats(session.id),
     getSessionLeaderboard(session.id, 10),
     getSessionParticipantDetails(session.id),
+    getCategoryScoreDistribution(),
   ]);
 
   const adminUrl = `/admin/sessions/${session.slug}?token=${session.adminToken}`;
@@ -185,6 +187,14 @@ export default async function SessionDetailPage({ params, searchParams }: Sessio
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Category Histogram */}
+      {categoryDist.categories.length > 0 && (
+        <CategoryHistogram
+          categories={categoryDist.categories}
+          bucketLabels={categoryDist.bucketLabels}
+        />
       )}
 
       {/* Per-participant detailed results */}
