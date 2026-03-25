@@ -41,6 +41,7 @@ export async function POST(
       total: results.length,
       succeeded: results.filter((r) => r.status === "fulfilled").length,
       failed: failed.length,
+      errors: failed.map((r) => r.error),
     });
   } catch (error) {
     console.error("POST /api/play/[publicId]/evaluate failed:", error);
