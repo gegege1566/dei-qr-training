@@ -11,6 +11,7 @@ type GoogleCandidate = {
 
 type GoogleResponse = {
   candidates?: GoogleCandidate[];
+  error?: { message?: string };
 };
 
 export const callGoogle = async (messages: ChatMessage[]): Promise<{ text: string; model: string }> => {
@@ -19,7 +20,7 @@ export const callGoogle = async (messages: ChatMessage[]): Promise<{ text: strin
     throw new Error("Missing GOOGLE_API_KEY env");
   }
 
-  const model = process.env.GOOGLE_MODEL ?? "models/gemini-1.5-flash-latest";
+  const model = process.env.GOOGLE_MODEL ?? "models/gemini-2.5-flash";
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${apiKey}`;
 
   // Extract system message and user messages
@@ -35,8 +36,15 @@ export const callGoogle = async (messages: ChatMessage[]): Promise<{ text: strin
       temperature: 0,
       maxOutputTokens: 1024,
       responseMimeType: "application/json",
-      thinkingConfig: {
-        thinkingBudget: 0,
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          scorePoint: { type: "INTEGER" },
+          scoreAccuracy: { type: "INTEGER" },
+          scoreIdea: { type: "INTEGER" },
+          summary: { type: "STRING" },
+        },
+        required: ["scorePoint", "scoreAccuracy", "scoreIdea", "summary"],
       },
     },
   };
@@ -61,7 +69,16 @@ export const callGoogle = async (messages: ChatMessage[]): Promise<{ text: strin
   }
 
   const json = (await response.json()) as GoogleResponse;
+
+  if (json.error) {
+    throw new Error(`Google API error: ${json.error.message}`);
+  }
+
   const content = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+
+  if (!content) {
+    throw new Error("Empty response from Google API");
+  }
 
   return { text: content.trim(), model };
 };
