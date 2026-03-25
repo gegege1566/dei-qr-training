@@ -16,7 +16,7 @@ export function SessionQRCard({ slug }: SessionQRCardProps) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    setEntryUrl(`${window.location.origin}/play/${slug}`);
+    setEntryUrl(`${window.location.origin}/session/${slug}`);
   }, [slug]);
 
   const handleCopy = async () => {
